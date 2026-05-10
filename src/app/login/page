@@ -1,0 +1,42 @@
+xingzengji@MacBook-Pro-2 GEO % cat src/app/login/page.tsx
+
+import Link from 'next/link'
+import { Header } from '@/components/ui/Header'
+import { Footer } from '@/components/ui/Footer'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
+
+export default function LoginPage() {
+  return (
+    <>
+      <Header />
+      <main className="flex min-h-screen items-center justify-center py-12">
+        <div className="container px-4">
+          <Card className="mx-auto max-w-md">
+            <CardHeader>
+              <CardTitle>登录</CardTitle>
+              <CardDescription>登录您的账户开始检测</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Input label="邮箱" type="email" placeholder="your@email.com" />
+                <Input label="密码" type="password" placeholder="••••••••" />
+                <Link href="/dashboard">
+                  <Button className="w-full">登录</Button>
+                </Link>
+              </div>
+              <p className="mt-4 text-center text-sm text-slate-600">
+                没有账户？<Link href="/dashboard" className="text-primary-600 hover:underline">注册</Link>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
+      <Footer />
+    </>
+  )
+}%                                                                                                                         
+
+
+

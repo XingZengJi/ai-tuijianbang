@@ -6,12 +6,25 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { supabase } from '@/lib/supabase'
 
-const industries = ['餐饮/美食', '零售/电商', '本地服务', '教育培训', 'B2B软件', '医疗健康', '美业', '家政', '装修', '其他']
+const industries = [
+  '餐饮/美食',
+  '零售/电商',
+  '本地服务',
+  '教育培训',
+  'B2B软件',
+  '医疗健康',
+  '美业',
+  '家政',
+  '装修',
+  '其他',
+]
 
 export default function NewBrandPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     industry: '',
@@ -25,11 +38,46 @@ export default function NewBrandPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
-    // MVP: 直接跳转模拟
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 500)
+    try {
+      // 获取当前用户
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        router.push('/login')
+        return
+      }
+
+      // 解析竞品
+      const competitors = formData.competitors
+        ? formData.competitors.split(',').map((c) => c.trim()).filter(Boolean)
+        : []
+
+      // 保存到数据库
+      const { data, error: insertError } = await supabase
+        .from('brands')
+        .insert({
+          user_id: session.user.id,
+          name: formData.name,
+          industry: formData.industry,
+          product: formData.product,
+          city: formData.city,
+          competitors: competitors,
+          price_range: formData.price_range,
+          highlights: formData.highlights,
+        })
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+
+      // 跳转到品牌详情
+      router.push(`/brand/${data.id}`)
+    } catch (err: any) {
+      setError(err.message || '创建失败')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const updateField = (field: string, value: string) => {
@@ -54,7 +102,9 @@ export default function NewBrandPage() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">行业 *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  行业 *
+                </label>
                 <select
                   className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                   value={formData.industry}
@@ -63,7 +113,9 @@ export default function NewBrandPage() {
                 >
                   <option value="">请选择行业</option>
                   {industries.map((ind) => (
-                    <option key={ind} value={ind}>{ind}</option>
+                    <option key={ind} value={ind}>
+                      {ind}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -99,7 +151,9 @@ export default function NewBrandPage() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">核心卖点</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  核心卖点
+                </label>
                 <textarea
                   className="flex min-h-[100px] w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                   value={formData.highlights}
@@ -108,9 +162,13 @@ export default function NewBrandPage() {
                 />
               </div>
 
+              {error && <p className="text-sm text-red-500">{error}</p>}
+
               <div className="flex gap-4">
                 <Link href="/dashboard">
-                  <Button type="button" variant="outline">取消</Button>
+                  <Button type="button" variant="outline">
+                    取消
+                  </Button>
                 </Link>
                 <Button type="submit" disabled={loading}>
                   {loading ? '创建中...' : '创建品牌'}
